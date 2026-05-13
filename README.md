@@ -86,4 +86,4 @@ Open **http://localhost:3000** to view the dashboard.
 ---
 
 ## 📄 License
-MIT © 2026 RetainIQ Team
+MIT © 2026 Revora AI
