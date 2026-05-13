@@ -1,4 +1,4 @@
-# RetainIQ — Strategic Revenue Intelligence & Autonomous Recovery
+# RevoraAI — Strategic Revenue Intelligence & Autonomous Recovery
 
 > The world's first **Revenue Intelligence Agent** that predicts churn with 92% accuracy, simulates boardroom-level strategic decisions, and autonomously recovers at-risk MRR through personalized AI interventions.
 
@@ -36,23 +36,6 @@ graph TD
 
 ---
 
-## 🛠️ Feature Breakdown
-
-### **1. Operations Dashboard**
-*   **Revenue at Risk Pipeline**: A filterable workspace of high-priority accounts needing immediate attention.
-*   **Interactable Revenue Curve**: A time-series chart of recovered revenue with hover-tooltips and zoom brushes.
-*   **Live Activity Feed**: Real-time tracking of every autonomous intervention sent and its outcome.
-
-### **2. Strategic Intelligence Suite**
-*   **Boardroom Simulator**: Test 8+ scenarios including SOC2 compliance, annual contract shifts, and support expansion.
-*   **Product Roadmap ROI**: Quantifies how much revenue is "leaking" due to missing features like Salesforce Sync.
-*   **Competitive War Room**: Tracks market pressure from competitors and suggests tactical counters.
-*   **Voice-of-Customer (VOC)**: Summarizes thousands of support tickets into high-level strategic risks.
-
-### **3. Executive AI Advisor (NLM)**
-*   A strategic partner that understands your live metrics. Ask it anything from *"What is the ROI of our recovery efforts?"* to *"Which competitor is gaining traction and why?"*
-
----
 
 ## 💻 Tech Stack
 
