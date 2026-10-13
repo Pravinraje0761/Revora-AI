@@ -11,7 +11,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# `lib/` from the Python template is NOT ignored: backend/lib/ is source code.
 lib64/
 parts/
 sdist/

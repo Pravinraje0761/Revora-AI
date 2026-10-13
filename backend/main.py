@@ -10,6 +10,7 @@ from pydantic import BaseModel, Field
 from typing import List, Literal
 
 from services.ai_service import executive_nlm_chat
+from models.churn_model import load_metrics
 from lib.churn_risk_profile import condense_profile_for_llm
 
 app = FastAPI(
@@ -77,7 +78,8 @@ async def chat_endpoint(request: ChatRequest):
 
     context = {
         **stats,
-        "accuracy": 92,
+        # Measured on the held-out split at training time; None until a model is trained.
+        "accuracy": (load_metrics() or {}).get("accuracy"),
         "top_risk_customer": top_cust_name,
         "top_risk_score": round(top_risk.get("churn_score", 0) * 100, 1),
         "total_customers": len(db.table("customers").data),
