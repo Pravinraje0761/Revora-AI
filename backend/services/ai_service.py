@@ -196,7 +196,7 @@ def _build_nlm_context_payload(context: dict) -> dict:
             "churn_reduction_percentage": context.get("churn_reduction_percentage"),
             "interventions_sent_today": context.get("interventions_sent_today"),
             "interventions_in_selected_range": context.get("interventions_in_range"),
-            "model_reported_precision_pct": context.get("accuracy"),
+            "model_test_accuracy_pct_on_synthetic_labels": context.get("accuracy"),
         },
         "highest_churn_score_account": {
             "name": context.get("top_risk_customer"),
@@ -214,10 +214,10 @@ NLM_SYSTEM_PROMPT = """You are **NLM**, the Strategic Intelligence Advisor for R
 Your communication style is:
 1. **Executive-First**: Be concise, punchy, and insight-dense. Avoid fluff. Talk like a high-level partner, not a support agent.
 2. **Data-Driven**: Every recommendation must reference the `LIVE_METRICS_JSON`. If a metric is trending poorly, explain the "revenue at risk" and the "path to recovery".
-3. **Model Awareness**: Always mention the predictive model's accuracy (e.g., "Our RandomForest model is currently operating at 92% accuracy") when discussing churn risk or at-risk accounts. This builds trust in the data.
+3. **Model Honesty**: If you cite model performance, use only `model_test_accuracy_pct_on_synthetic_labels` from `LIVE_METRICS_JSON`, and say that it is measured against synthetic, rule-generated labels in this demo. If it is null, say the model has not been evaluated yet. Never state an accuracy figure that is not in the data.
 4. **Action-Oriented**: Don't just report status; suggest the next best move. Use the available strategy playbooks (discounts, feature education, direct outreach) to provide concrete solutions.
 5. **Contextually Sharp**: Leverage the chat history to build a continuous narrative. If the user asks about a specific customer, deep-dive into their churn reasons and sentiment.
-6. **Human & Nuanced**: Use professional but natural language. Avoid robotic lists. No emojis. Never admit you are an AI.
+6. **Human & Nuanced**: Use professional but natural language. Avoid robotic lists. No emojis. If asked, say plainly that you are an AI advisor.
 
 Key Focus Areas:
 - **Boardroom Scenarios**: Analyze the impact of price changes, new features, or support expansion.
@@ -284,6 +284,14 @@ def executive_nlm_chat(
     return _executive_demo_fallback(query, context), "demo"
 
 
+def _model_phrase(context: dict) -> str:
+    """Describe the churn model using only its measured held-out accuracy."""
+    a = context.get("accuracy")
+    if a is None:
+        return "the churn model (not yet evaluated)"
+    return f"the churn model (held-out accuracy {a}% on synthetic demo labels)"
+
+
 def _executive_demo_fallback(query: str, context: dict) -> str:
     """Rule-based advisor when OPENAI_API_KEY is unset or API fails."""
     q = query.lower()
@@ -291,7 +299,7 @@ def _executive_demo_fallback(query: str, context: dict) -> str:
     if any(k in q for k in ["revenue at risk", "risk", "mrr"]):
         return (
             "**Situation:** We are currently monitoring high-risk accounts representing significant MRR exposure.\n\n"
-            f"**Analysis:** Based on our **{context.get('accuracy', 92)}% accurate** churn model, we have identified **${context.get('revenue_at_risk', 0):,.2f}** in at-risk revenue. "
+            f"**Analysis:** Based on {_model_phrase(context)}, we have identified **${context.get('revenue_at_risk', 0):,.2f}** in at-risk revenue. "
             f"The primary driver across these accounts is a decline in feature usage frequency.\n\n"
             "**Recommendation:** Deploy the 'Value Realization' playbook to the top 10% of these accounts immediately to stabilize engagement."
         )
@@ -299,31 +307,30 @@ def _executive_demo_fallback(query: str, context: dict) -> str:
     if any(k in q for k in ["recovered", "recovery", "how much saved"]):
         return (
             "**Situation:** Our autonomous recovery engine is actively securing vulnerable revenue.\n\n"
-            f"**Analysis:** With a model precision of **{context.get('accuracy', 92)}%**, we have successfully recovered **${context.get('revenue_recovered', 0):,.2f}** through autonomous interventions this period.\n\n"
+            f"**Analysis:** Using {_model_phrase(context)}, interventions have recovered **${context.get('revenue_recovered', 0):,.2f}** through autonomous interventions this period.\n\n"
             "**Recommendation:** Prioritize the top 5 accounts in the 'At-Risk Pipeline' for high-touch executive alignment to protect remaining vulnerable MRR."
         )
 
     if any(k in q for k in ["churn reduction", "reduction", "success rate"]):
         return (
             "**Situation:** Autonomous recovery agents are driving significant churn deflection.\n\n"
-            f"**Analysis:** The current **churn reduction rate is {context.get('churn_reduction_percentage', 0)}%**, supported by our **{context.get('accuracy', 92)}% reliable** predictive engine. "
+            f"**Analysis:** The current **churn reduction rate is {context.get('churn_reduction_percentage', 0)}%**, using {_model_phrase(context)}. "
             f"This is derived from **{context.get('interventions_in_range', 0)}** strategic touchpoints where AI agents successfully re-engaged users.\n\n"
             "**Recommendation:** Scale the 'High Risk Discount' playbook for accounts with >80% churn probability to further improve recovery success."
         )
 
     if any(k in q for k in ["accuracy", "model", "random forest", "ml"]):
         return (
-            "**Situation:** Churn prediction is powered by a high-precision RandomForest model.\n\n"
-            f"**Analysis:** The model is currently reporting **{context.get('accuracy', 92)}% accuracy**. "
-            "It monitors 11 distinct churn dimensions including feature usage depth and sentiment shifts. "
-            "This high precision allows us to act with confidence before the churn event occurs.\n\n"
-            "**Recommendation:** Continue to feed intervention outcomes back into the training loop to maintain precision as user behavior evolves."
+            "**Situation:** Churn risk is scored by a RandomForest model over five usage and account features.\n\n"
+            f"**Analysis:** This is {_model_phrase(context)}. "
+            "In this demo the churn labels are generated by a fixed rule, so the figure shows how well the model recovers that rule, not real-world predictive accuracy.\n\n"
+            "**Recommendation:** Train on observed churn outcomes before relying on these scores for real decisions."
         )
 
     if any(k in q for k in ["who", "worst", "highest risk", "top customer", "most likely to churn"]):
         return (
             "**Situation:** One account represents the highest immediate churn risk in the fleet.\n\n"
-            f"**Analysis:** **{context.get('top_risk_customer', 'N/A')}** is currently at **{context.get('top_risk_score', 0)}%** churn probability, as flagged by our **{context.get('accuracy', 92)}% accurate** model. "
+            f"**Analysis:** **{context.get('top_risk_customer', 'N/A')}** is currently at **{context.get('top_risk_score', 0)}%** churn probability, as flagged by {_model_phrase(context)}. "
             "Signals indicate a severe drop in feature engagement over the last 14 days.\n\n"
             "**Recommendation:** Immediate intervention required. Deploy a CEO-style personalized recovery email with a 3-month retention credit."
         )
@@ -331,7 +338,7 @@ def _executive_demo_fallback(query: str, context: dict) -> str:
     if any(k in q for k in ["strategy", "prioritize", "next steps", "should we"]):
         return (
             "**Strategic Priorities for this Week:**\n\n"
-            f"**1. Revenue Protection:** Target the **${context.get('revenue_at_risk', 0):,.2f}** in high-risk MRR through the automated recovery pipeline, leveraging our **{context.get('accuracy', 92)}% accurate** signals.\n"
+            f"**1. Revenue Protection:** Target the **${context.get('revenue_at_risk', 0):,.2f}** in high-risk MRR through the automated recovery pipeline, prioritised by {_model_phrase(context)}.\n"
             "**2. Expansion Harvesting:** Route the machine-identified expansion candidates straight to the AE team for upgrade conversations.\n"
             "**3. Product Alignment:** Review the 'Product Signals' list. Churn drivers are highlighting a critical need for **Native Salesforce Sync**."
         )
@@ -340,7 +347,7 @@ def _executive_demo_fallback(query: str, context: dict) -> str:
         nc = len(context.get("expansion_opportunities", []) or [])
         return (
             "**Executive Summary:**\n\n"
-            f"**Portfolio Health:** Monitoring **{context.get('total_customers', 0)}** total logos. **{context.get('at_risk_count', 0)}** are currently flagged for churn watch by our **{context.get('accuracy', 92)}% accurate** engine.\n"
+            f"**Portfolio Health:** Monitoring **{context.get('total_customers', 0)}** total logos. **{context.get('at_risk_count', 0)}** are currently flagged for churn watch by {_model_phrase(context)}.\n"
             f"**Financial Impact:** ~$**{context.get('revenue_at_risk', 0):,.2f}/mo** MRR is at risk, while **${context.get('revenue_recovered', 0):,.2f}** has been secured by Revora AI.\n"
             f"**Growth Velocity:** **{nc}** expansion opportunities are identified, representing significant potential MRR lift.\n\n"
             "_Note: This is a high-level summary powered by our strategic intelligence engine._"

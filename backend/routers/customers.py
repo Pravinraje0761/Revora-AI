@@ -4,6 +4,7 @@ from typing import Optional
 from datetime import date
 
 from lib.mock_db import get_mock_db
+from models.churn_model import load_metrics
 from services.intervention_filters import (
     filter_interventions,
     playbook_matches,
@@ -137,6 +138,7 @@ def get_customer_stats():
     churn_reduction = (recovered_count / total_interventions * 100) if total_interventions > 0 else 0
 
     return {
+        "model_accuracy": (load_metrics() or {}).get("accuracy"),
         "at_risk_count": len(high_risk_customers) + len(medium_risk_customers),
         "high_risk_count": len(high_risk_customers),
         "medium_risk_count": len(medium_risk_customers),
@@ -200,6 +202,7 @@ def post_customer_stats(body: StatsFilterBody):
     product_intel = get_product_intelligence(db.table("customers").data)
 
     return {
+        "model_accuracy": (load_metrics() or {}).get("accuracy"),
         "at_risk_count": len(high_risk_customers) + len(medium_risk_customers),
         "high_risk_count": len(high_risk_customers),
         "medium_risk_count": len(medium_risk_customers),
