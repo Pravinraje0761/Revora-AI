@@ -88,7 +88,7 @@ export default function ExecutiveChat() {
               Executive advisor
             </h2>
             <p className="text-[10px] text-gray-500">
-              Accuracy: <span className="text-emerald-600 font-bold">92%</span>
+              Grounded in live dashboard metrics
             </p>
           </div>
         </div>
